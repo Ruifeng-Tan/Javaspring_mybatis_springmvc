@@ -1,0 +1,2 @@
+User settings file: C:\Users\Lenovo\.m2\settings.xml
+Local repository: C:\Users\Lenovo\.m2\repository
