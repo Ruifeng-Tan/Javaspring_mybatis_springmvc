@@ -1504,5 +1504,70 @@ public class Role implements Serializable {
 
 ![image-20201031110405369](images/image-20201031110405369.png)
 
+然后就是接口类及其xml的修改了，这都是老话了。之后我们写个junit测试一下就OK。
 
+![image-20201031183657360](images/image-20201031183657360.png)
 
+### 5.4 查询用户获取用户包含的角色信息
+
+对应的sql语句如下:
+
+- 返回所有用户及其角色信息，如果角色为空仍旧返回用户，但是其角色信息列表为空。(因为用的是左外连接)
+
+```xml
+    <!--查询所有--> <!--根据user查找多对多,用户全部显示-->
+    <select id="findAll" resultMap="userRole">
+        select user.*, role.ID as RID, role.ROLE_NAME as ROLE_NAME, role.ROLE_DESC as ROLE_DESC from user left outer join user_role on user.id = user_role.UID
+          left outer  join role on user_role.RID=role.ID
+    </select>
+```
+
+- 只返回有角色信息的用户及其角色信息。(因为用的是自然连接)
+
+```xml
+    <!--查询所有--> <!--根据user查找多对多,有角色的用户显示-->
+    <select id="findAll2" resultMap="userRole">
+        select user.*, role.ID as RID, role.ROLE_NAME as ROLE_NAME, role.ROLE_DESC as ROLE_DESC
+            from user,user_role, role where user.id = user_role.UID and user_role.RID=role.ID
+    </select>
+```
+
+# 四 (补充知识) JNDI
+
+## 1 简介
+
+[介绍JNDI的博客](https://www.cnblogs.com/study-everyday/p/6723313.html)
+
+JNDI模拟的是windows的注册表，如下：Key存的是路径+名称，value中存的就是对象。
+
+![image-20201031185202739](images/image-20201031185202739.png)
+
+当我们的tomcat服务器一启动，效果说明如下:
+
+![image-20201031191746070](images/image-20201031191746070.png)
+
+## 2 JNDI搭建maven的war工程
+
+①选择新建工程，在maven工厂创建界面，勾选`Create from archetype`
+
+![image-20201031203826523](images/image-20201031203826523.png)
+
+②选择webapp，点击下一步
+
+![image-20201031203956952](images/image-20201031203956952.png)
+
+③取好工厂名，设置好自己的groupID即可。
+
+![image-20201031204035475](images/image-20201031204035475.png)
+
+④创建完毕以后我们的工厂中是除了.idea文件夹以外没有别的文件夹的。
+
+![image-20201031204428005](images/image-20201031204428005.png)
+
+⑤所以我们要自己创建文件夹，不过所辛，idea会自动给我们一些提示 ，免得一些常用问价夹也要自己敲名字。我们全选创建。
+
+![image-20201031204530033](images/image-20201031204530033.png)
+
+**注意：**自己手敲命名创建出来的文件夹并不在source root，我们要将test以及main下的java文件夹设置为`Sources Root`，resources文件夹设置为`Resources Root`，test的java则要设置为test的`Sources Root`。这和pycharm的配置是十分类似的。
+
+![image-20201031204906530](images/image-20201031204906530.png)
