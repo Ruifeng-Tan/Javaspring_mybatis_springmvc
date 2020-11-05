@@ -4,6 +4,8 @@
 
 # 1 SpringMVC
 
+
+
 # 一 SpringMVC的基本概念
 
 ## 1 三层架构和MVC
@@ -875,6 +877,365 @@ bean class是我们的自定义转换器类的全路径
         System.out.println(servletContext);
 
         System.out.println(response);
+        return "success";
+    }
+```
+
+
+
+
+
+# 四 常用注解
+
+restful编程风格尽量的根据Http请求的类型与参数来决定调用的控制器的方法，而不是给每一个方法都配置一个专门的路由。
+
+![image-20201105155230592](images/image-20201105155230592.png)
+
+## 1 RequestParam
+
+作用： 把请求中指定名称的参数给控制器中的形参赋值。 
+
+属性：
+
+-  value：请求参数中的名称。
+
+-  required：请求参数中是否必须提供此参数。默认值：true。表示必须提供，如果不提供将报错。
+
+
+
+使用该方法可以让我们请求的名字与controller方法的参数名字不一样。
+
+```java
+@RequestMapping("/useRequestParam")
+public String   useRequestParam(@RequestParam("name")String username,
+@RequestParam(value="age",required=false)Integer age){ System.out.println(username+","+age);
+return "success";
+}
+
+```
+
+
+
+## 2 RequestBody
+
+作用：
+
+用于获取请求体内容。直接使用得到是 key=value&key=value...结构的数据。 get 请求方式不适用。
+
+属性：
+
+- required：是否必须有请求体。默认值是:true。当取值为 true 时,get 请求方式会报错。如果取值为 false，get 请求得到是 null。
+
+
+
+如以下代码所示，当我们给控制器的一个方法形参加上了该注解以后，**这个形参取回的就是请求的整个表单**，而不再是一个同名的请求参数。
+
+```java
+//post 请求 jsp 代码：
+<!-- request body 注解 -->
+<form action="springmvc/useRequestBody" method="post">
+用户名称：<input type="text" name="username" ><br/>
+用户密码：<input type="password" name="password" ><br/>
+用户年龄：<input type="text" name="age" ><br/>
+<input type="submit" value="保存">
+</form>
+//get 请求 jsp 代码：
+<a href="springmvc/useRequestBody?body=test">requestBody 注解 get 请求</a>控制器代码：
+/**
+* RequestBody 注解
+* @param user
+* @return
+*/ @RequestMapping("/useRequestBody")
+public String   useRequestBody(@RequestBody(required=false) String body){ System.out.println(body);
+return "success";
+}
+
+```
+
+
+
+## 3 PathVaribale
+
+作用：
+
+用于绑定 url 中的占位符。例如：请求 url 中 /delete/{id}，这个{id}就是 url 占位符。
+
+url 支持占位符是 spring3.0 之后加入的。是 springmvc 支持 rest 风格 URL 的一个重要标志。
+
+属性：
+
+- value：用于指定 url 中占位符名称。
+- required：是否必须提供占位符。
+
+
+
+```jsp
+<a href="anno/testPathVariable/10">testPathVariable</a>
+```
+
+```java
+    /**
+     * PathVariable注解
+     * @return
+     */
+    @RequestMapping(value="/testPathVariable/{sid}")
+    public String testPathVariable(@PathVariable(name="sid") String id){
+        System.out.println("执行了...");
+        System.out.println(id);
+        return "success";
+    }
+```
+
+
+
+## 4 RequestHeader(不常用)
+
+作用：
+
+用于获取请求消息头。
+
+属性：
+
+- value：提供消息头名称
+-  required：是否必须有此消息头
+- 
+
+注:
+
+在实际开发中一般不怎么用。
+
+
+
+## 5 CookieValue
+
+作用：
+
+用于把指定 cookie 名称的值传入控制器方法参数。
+
+属性：
+
+- value：指定 cookie 的名称。
+- required：是否必须有此 cookie。
+
+```java
+    /**
+     * 获取Cookie的值
+     * @return
+     */
+    @RequestMapping(value="/testCookieValue")
+    public String testCookieValue(@CookieValue(value="JSESSIONID") String cookieValue){
+        System.out.println("执行了...");
+        System.out.println(cookieValue);
+        return "success";
+    }
+```
+
+
+
+## 6 ModelAttribute
+
+作用：
+
+该注解是 SpringMVC4.3 版本以后新加入的。它可以用于修饰方法和参数。
+
+出现在方法上，表示当前方法会在控制器的方法执行之前，先执行。它可以修饰没有返回值的方法，也可以修饰有具体返回值的方法。
+
+出现在参数上，获取指定的数据给参数赋值。
+
+属性：
+
+- value：用于获取数据的 key。key 可以是 POJO 的属性名称，也可以是 map 结构的 key。
+
+应用场景：
+
+当表单提交数据不是完整的实体类数据时，保证没有提交数据的字段使用数据库对象原来的数据。
+
+例如：
+
+我们在编辑一个用户时，用户有一个创建信息字段，该字段的值是不允许被修改的。在提交表单数据是肯定没有此
+
+字段的内容，一旦更新会把该字段内容置为 null，此时就可以使用此注解解决问题。
+
+JSP代码如下：
+
+```jsp
+    <form action="anno/testModelAttribute" method="post">
+        用户姓名：<input type="text" name="uname" /><br/>
+        用户年龄：<input type="text" name="age" /><br/>
+        <input type="submit" value="提交" />
+    </form>
+
+```
+
+### 6.1 有return的ModelAttribute方法
+
+若方法有返回值，请求参数变成了方法的返回值，接下来在控制器类中就会寻找与返回值同类型同名的控制器方法继续处理请求
+
+控制器代码如下：
+
+```java
+    @RequestMapping(value="/testModelAttribute")
+    public String testModelAttribute(@ModelAttribute("abc") User user){
+        System.out.println("testModelAttribute执行了...");
+        System.out.println(user);
+        return "success";
+    }
+
+    /**
+     * 该方法会先执行
+	*/
+    @ModelAttribute
+    public User showUser(String uname){
+        System.out.println("showUser执行了...");
+        // 通过用户查询数据库（模拟）
+        User user = new User();
+        user.setUname(uname);
+        user.setAge(20); // 请求表单没有提交用户年龄以及生日属性
+        user.setDate(new Date());
+        return user;
+    }
+     
+```
+
+
+
+### 6.2 无return的ModelAttribute方法
+
+@ModelAttribute的方法没有返回值时可以将数据存入到Map结构中，然后在控制器方法中从Map中取值。
+
+```java
+    /**
+     * ModelAttribute注解
+     * @return
+     */
+    @RequestMapping(value="/testModelAttribute")
+    public String testModelAttribute(@ModelAttribute("abc") User user){
+        System.out.println("testModelAttribute执行了...");
+        System.out.println(user);
+        return "success";
+    }
+
+    @ModelAttribute
+    public void showUser(String uname, Map<String,User> map){
+        System.out.println("showUser执行了...");
+        // 通过用户查询数据库（模拟）
+        User user = new User();
+        user.setUname(uname);
+        user.setAge(20);
+        user.setDate(new Date());
+        map.put("abc",user);// 将数据存入map中
+    }
+```
+
+
+
+## 7 SessionAttribute
+
+作用：
+
+用于多次执行控制器方法间的参数共享。
+
+属性：
+
+- value：用于指定存入的属性名称
+-  type：用于指定存入的数据类型。
+
+
+
+### 7.1 存入值
+
+如果我们想让控制器处理请求，并在处理请求之后将一定的信息传入到返回页面上展示，就要用到该注解。
+
+**spring专门提供了一个Model类来处理这种请求信息的存储获取**。
+
+测试的JSP代码如下：
+
+```jsp
+<a href="anno/testSessionAttributes">testSessionAttributes</a>
+```
+
+
+
+控制器代码如下：
+
+```java
+    /**
+     * SessionAttributes的注解
+     * @return
+     */
+    @RequestMapping(value="/testSessionAttributes")
+    public String testSessionAttributes(Model model){
+        System.out.println("testSessionAttributes...");
+        // 底层会存储到request域对象中
+        model.addAttribute("msg","美美");
+        return "success";
+    }
+```
+
+
+
+这时候我们在success界面中就可以通过${}获取存在请求域的值，如果我们在控制器类上也加一个`@SessionAttributes(value={"msg"})`注解，就可以把键为`msg`的键值对存入到session域中。这时候我们就可以在`${sessionScope}`也看到我们存入的‘美美“。
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+
+    <h3>入门成功</h3>
+
+    ${ msg }
+
+    ${sessionScope}
+
+</body>
+</html>
+
+```
+
+前端展示如图：
+
+![image-20201105163041166](images/image-20201105163041166.png)
+
+
+
+### 7.2 获取值
+
+当将数据存到到session域之后，在同一session的会话，就可以在处理请求的过程中随时获取保存在session域中的属性进行需要的操作。比如我现在的以下方法就可以取出之前的`testSessionAttributes`方法存进session域中的”美美“。
+
+```java
+    /**
+     * 获取值
+     * @param modelMap
+     * @return
+     */
+    @RequestMapping(value="/getSessionAttributes")
+    public String getSessionAttributes(ModelMap modelMap){
+        System.out.println("getSessionAttributes...");
+        String msg = (String) modelMap.get("msg");
+        System.out.println(msg);
+        return "success";
+    }
+```
+
+
+
+### 7.3 删除值
+
+调用SessionStatus对象的setComplete方法，表示设置完成，清空session中的所有数据。
+
+```java
+    /**
+     * 清除
+     * @param status
+     * @return
+     */
+    @RequestMapping(value="/delSessionAttributes")
+    public String delSessionAttributes(SessionStatus status){
+        System.out.println("getSessionAttributes...");
+        status.setComplete();
         return "success";
     }
 ```
