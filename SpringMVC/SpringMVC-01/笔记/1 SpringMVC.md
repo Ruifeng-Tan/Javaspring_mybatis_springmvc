@@ -1032,7 +1032,7 @@ url 支持占位符是 spring3.0 之后加入的。是 springmvc 支持 rest 风
 
 
 
-## 6 ModelAttribute
+## 6 ModelAttribute(重点)
 
 作用：
 
@@ -1174,7 +1174,9 @@ JSP代码如下：
 
 
 
-这时候我们在success界面中就可以通过${}获取存在请求域的值，如果我们在控制器类上也加一个`@SessionAttributes(value={"msg"})`注解，就可以把键为`msg`的键值对存入到session域中。这时候我们就可以在`${sessionScope}`也看到我们存入的‘美美“。
+这时候我们在success界面中就可以通过${}获取存在请求域的值，如果我们在控制器类上也加一个`@SessionAttributes(value={"msg"})`注解，就可以把键为`msg`的键值对存入到session域中。这以后在同一个会话中，其他方法也能够操作该方法存到到Map当中的数据。
+
+**注意：isELIgnored标签一定要设置为false才可以使用${}传值展示数据，该标签的讲解请[点击这里](https://www.cnblogs.com/wl0000-03/p/6406582.html)**
 
 ```jsp
 <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>

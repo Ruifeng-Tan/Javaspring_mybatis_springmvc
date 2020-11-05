@@ -45,3 +45,12 @@
 
 ```
 
+
+
+# 2 Tomcat日志输出中文乱码
+
+在tomcat的安装路径的conf文件夹下D:\Configuration\apache-tomcat-8.5.59\conf
+
+找到logging.properties文件，然后将所有编码为UTF-8的行都注释掉即可。
+
+![image-20201105232740392](images/image-20201105232740392.png)
