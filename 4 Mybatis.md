@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 # 4 Mybatis
 
 # 今日大纲
@@ -447,7 +451,7 @@
 
 
 
-## 1 环境搭建
+## 1 环境搭建（重点)
 
 **注意如果我们选择了注解开发，那么我们就不能创建IUserDao.xml配置文件，否则只要resources文件夹的相同路径下存在该文件，不管我们在mapper中是否指定用它，mybatis都会报错**
 
@@ -486,6 +490,7 @@
        </environments>
        <!-- 指定带有注解的dao接口的所在位置 -->
        <mappers>
+           <!--<mapper class="org.example.dao.IUserDao。"></mapper>-->
            <package name="org.example.dao"/>
        </mappers>
    
@@ -663,17 +668,52 @@
     }
 ```
 
+## 6 方法有多个形参的时候
 
+为了进一步理解方法形参名与注解的#{}传值的关系，我做了以下代码编写。
 
-## 5 Mybatis中注解建立实体类属性名和字段名的对应关系
+```java
+    /**
+     * 根据id查询用户
+     * @param userId
+     * @return
+     */
+    @Select("select * from user  where id=#{userId} and id=#{u2}")
+    @ResultMap("userMap")
+    User findById(Integer userId,Integer u2);
+```
 
-### 5.1 问题引出
+测试方法如下：
+
+```java
+    @Test
+    public void testFindOne(){
+        User user = userDao.findById(57,57);
+        System.out.println(user);
+    }
+```
+
+结果却是报错，这说明#{}的要求并不是与形参名相同，只是因为当方法只有一个形参的时候，无论#{}中写什么，都会将形参传入的值传送到#{}中，所以之前的单形参方法能够通过。那么有多个形参的时候怎么办呢？
+
+解决方案参考CSDN:https://blog.csdn.net/jeffleo/article/details/55803548
+
+![image-20201109172222776](images/image-20201109172222776.png)
+
+我们使用@Param注解为方法形参指定传入到的#{}的匹配关系，就可以成功执行方法了：
+
+![image-20201109172538514](images/image-20201109172538514.png)
+
+![image-20201109172554729](images/image-20201109172554729.png)
+
+## 7 Mybatis中注解建立实体类属性名和字段名的对应关系
+
+### 7.1 问题引出
 
 当我们不希望让实体类的属性名和字段名必须保持一致时。(在实际开发中因为数据库和java命名规范不一样，常常需要这样做)。使用xml我们可以用resultMap进行配置，该功能我们用注解其实也可以完成。
 
 
 
-### 5.2 @Results注解
+### 7.2 @Results注解
 
 #### 1 注解源码浅析
 
@@ -781,7 +821,7 @@ public @interface Result {
 
 
 
-## 6 一对多的查询配置
+## 8 一对多的查询配置
 
 我们知道一个用户可能有多个账户，那么我们如何用注解实现查询所有用户并且返回其素有账户信息呢？
 
@@ -885,7 +925,7 @@ public class User implements Serializable {
     List<User> findAll();
 ```
 
-## 7  一对一的查询配置
+## 9  一对一的查询配置
 
 道理是相同的，但是一对一使用的属性名和内部注解不同。
 
@@ -911,7 +951,7 @@ public class User implements Serializable {
 
 
 
-## 8 使用二级缓存
+## 10 使用二级缓存
 
 使用一级缓存是我们不需要配置的，它本身就在使用了。即每次查询到的数据都会自动保存在sqlSession中，当发生修改，保存，删除，close，commit等操作时一级缓存会自动清空。
 
