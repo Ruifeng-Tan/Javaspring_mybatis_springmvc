@@ -215,6 +215,10 @@ ModelAndView底层其实也用到了ModelMap，我们可以将User对象存进�
 
 ## 2 转发和重定向
 
+转发与重定向的区别：https://blog.csdn.net/meiyalei/article/details/2129120
+
+**主要就是转发是服务器内部操作找到别的资源直接给浏览器显示，重定向相当于告诉客户端你要请求的资源在另外一个url，客户端再根据该url发一次request获取页面**
+
 `<br/>`标签表示在页面上进行一次换行。
 
 讲解教程:https://www.runoob.com/tags/tag-br.html
@@ -290,6 +294,33 @@ ModelAndView底层其实也用到了ModelMap，我们可以将User对象存进�
         // 重定向
         return "redirect:/index.jsp";
     }
+```
+
+
+
+自我补充，如果重定向想重定向到本Module以外的页面，比如百度的查询页面或者别的Module下的页面，可以用以下写法：
+
+```java
+@RequestMapping("/redirect")
+public String redirect(HttpServletResponse response) {
+    System.out.println("redirect");
+    return "redirect:http://www.baidu.com";
+}
+
+@RequestMapping("/redirect1")
+@ResponseBody
+public void redirect1(HttpServletResponse response) {
+    System.out.println("redirect1");
+    try 
+    {
+    response.sendRedirect("http://www.baidu.com");
+    } 
+    catch (IOException e) 
+    {
+    // TODO Auto-generated catch block
+    e.printStackTrace();
+	}
+}
 ```
 
 
@@ -887,14 +918,16 @@ public class SysExceptionResolver implements HandlerExceptionResolver{
 
 ### 4.3 配置异常处理器
 
-这里的bean id可以随意取。
+这里的bean id可以随意取。class的全路径一定要写对
 
 ```xml
     <!--配置异常处理器-->
     <bean id="sysExceptionResolver" class="cn.itcast.exception.SysExceptionResolver"/>
 ```
 
-### 4.4 Controller方法
+### 4.4 编写Controller方法
+
+
 
 ```java
 package cn.itcast.controller;
@@ -927,4 +960,170 @@ public class UserController {
 }
 
 ```
+
+
+
+# 四 SpringMVC中的拦截器
+
+## 1 拦截器的作用
+
+预处理：执行controller之前进行的处理
+
+后处理：执行controller之后进行的处理
+
+![image-20201109094101925](images/image-20201109094101925.png)
+
+![image-20201109031030068](images/image-20201109031030068.png)
+
+## 2 环境搭建
+
+复制粘贴之前的工程的web.xml，springmvc.xml，pom.xml即可
+
+## 3 实现拦截器
+
+步骤：
+
+1. 编写一个普通类实现HandlerInterceptor接口
+2. 配置拦截器
+
+
+
+### 3.1 编写拦截器类
+
+我们在`cn.itcast.controller.cn.itcast.interceptor`路径下新建拦截器类。
+
+该类一定要实现`HandlerInterceptor`接口。
+
+- preHandle方法：
+  - 返回值：
+    - true表示放行，执行下一个拦截器，如果没有，则执行controller中的方法
+    - false表示不放行
+  - **常用于做些预处理**
+- postHandle方法：在controller执行之后，跳转jsp页面之前执行的方法。比如判断用户是否登录成功，如果成功就跳转到登录成功界面，否则跳转到错误界面。
+- afterCompletion方法：在跳转jsp页面之后执行的方法。**一般用于释放资源**
+
+```java
+package cn.itcast.controller.cn.itcast.interceptor;
+
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * 自定义拦截器
+ */
+public class MyInterceptor1 implements HandlerInterceptor{
+
+    /**
+     * 预处理，controller方法执行前
+     * return true 放行，执行下一个拦截器，如果没有，执行controller中的方法
+     * return false不放行
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("MyInterceptor1执行了...前1111");
+        return true;
+        // 拦截器不允许controller方法执行，直接跳转到错误页面代码如下：
+        // request.getRequestDispatcher("/WEB-INF/pages/error.jsp").forward(request,response);
+        // return false
+    }
+
+    /**
+     * 后处理方法，controller方法执行后，success.jsp执行之前
+     * @param request
+     * @param response
+     * @param handler
+     * @param modelAndView
+     * @throws Exception
+     */
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        System.out.println("MyInterceptor1执行了...后1111");
+        // request.getRequestDispatcher("/WEB-INF/pages/error.jsp").forward(request,response);
+    }
+
+    /**
+     * success.jsp页面执行后，该方法会执行
+     * @param request
+     * @param response
+     * @param handler
+     * @param ex
+     * @throws Exception
+     */
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        System.out.println("MyInterceptor1执行了...最后1111");
+    }
+
+}
+```
+
+
+
+### 3.2 配置拦截器(链)
+
+——————————————————————————————————————————————————
+
+**Q:还记得我们的springmvc是如何生效的吗？**
+
+A:这里，我们的springmvc是通过注解配置上的，我们打开了注解扫描，扫描了响应路径下所有的包，如果包中的某个bean类通过`@Component，@Controller，@Service，@Repository注解`被放入了springmvc容器中。此外为了能够让webapp工程知道我们使用了springmvc，我们需要在web.xml中告诉他我们使用的配置文件的路径。
+
+```xml
+  <display-name>Archetype Created Web Application</display-name>
+  <servlet>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>classpath:springmvc.xml</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+
+```
+
+——————————————————————————————————————————————————
+
+我们在springmvc中进行拦截器链的配置。指定需要拦截的方法路由，或者指定不需要拦截的方法路由。
+
+同时用bean class指定响应的拦截器类。
+
+配置拦截器的springmvc.xml写法如下：
+
+```xml
+    <!--配置拦截器-->
+    <mvc:interceptors>
+        <!--配置拦截器-->
+        <mvc:interceptor>
+            <!--要拦截的具体的方法-->
+            <mvc:mapping path="/user/*"/>
+            <!--不要拦截的方法
+            <mvc:exclude-mapping path=""/>
+            -->
+            <!--配置拦截器对象-->
+            <bean class="cn.itcast.controller.cn.itcast.interceptor.MyInterceptor1" />
+        </mvc:interceptor>
+
+        <!--配置第二个拦截器-->
+        <mvc:interceptor>
+            <!--要拦截的具体的方法-->
+            <mvc:mapping path="/**"/>
+            <!--不要拦截的方法
+            <mvc:exclude-mapping path=""/>
+            -->
+            <!--配置拦截器对象-->
+            <bean class="cn.itcast.controller.cn.itcast.interceptor.MyInterceptor2" />
+        </mvc:interceptor>
+    </mvc:interceptors>
+```
+
+
 
