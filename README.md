@@ -17,3 +17,10 @@ Java作为一门高效的生产力语言引起了我的极大兴趣，目前决�
 
 科研方向：NLP以及基于知识图谱的问答系统，目前在武汉大学计算机学院[祝园园](http://cs.whu.edu.cn/teacherinfo.aspx?id=196)副教授课题组学习。
 
+
+
+## 3 工程仓库
+
+目前结合JavaEE知识开发了的项目仓库地址如下：
+
+电商管理平台(Vue＋ssm)：https://github.com/w824449964/Vue_ElectronicBusinessSystem
